@@ -23,8 +23,11 @@ const App = () => {
     const newOrder: Order = { id: nextOrderId, status: "PENDING", type };
     setNextOrderId(nextOrderId + 1);
     setOrders((currentOrders) => [...currentOrders, newOrder]);
-    handleOrders();
   };
+
+  useEffect(() => {
+    handleOrders();
+  }, [orders]);
 
   const [bots, setBots] = useState<Bot[]>([]);
   const [nextBotId, setNextBotId] = useState<number>(1);
