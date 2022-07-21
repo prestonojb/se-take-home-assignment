@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+
+import OrderLine from "./components/OrderLine";
 
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
@@ -8,21 +10,8 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Stack from "react-bootstrap/Stack";
 
-type Order = {
-  id: number;
-  botId?: number;
-  status: "PENDING" | "COMPLETE";
-  type: "Normal" | "VIP";
-};
-
-type Bot = {
-  id: number;
-  status: "BUSY" | "AVAILABLE";
-  orderId?: number;
-  processOrder?: ReturnType<typeof setTimeout>;
-};
-
-const TIME_TO_PROCESS_ORDER = 10000;
+import { Bot, Order } from "./constants/types";
+import { TIME_TO_PROCESS_ORDER } from "./constants/values";
 
 const App = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -58,6 +47,8 @@ const App = () => {
 
   useEffect(() => {
     const idleBots = bots.filter((bot) => bot.status === "AVAILABLE");
+    if (idleBots.length === 0) return;
+
     const unprocessedOrders = orders
       .filter(
         (order) =>
@@ -70,8 +61,6 @@ const App = () => {
         }
         return a.type === "VIP" ? -1 : 1;
       });
-
-    if (idleBots.length === 0) return;
     if (unprocessedOrders.length === 0) return;
 
     const botsCopy = [...bots];
@@ -118,11 +107,11 @@ const App = () => {
             {orders
               .filter((order) => order.status === "PENDING")
               .map((order, idx) => (
-                <div key={idx}>
-                  {"Order " + order.id} {order.type === "VIP" && "(VIP)"}{" "}
-                  {getOrderBot(order.id) &&
-                    `(Bot ${getOrderBot(order.id)?.id})`}
-                </div>
+                <OrderLine
+                  idx={idx}
+                  order={order}
+                  bot={getOrderBot(order.id)}
+                />
               ))}
           </div>
         </Col>
@@ -133,11 +122,11 @@ const App = () => {
             {orders
               .filter((order) => order.status === "COMPLETE")
               .map((order, idx) => (
-                <div key={idx}>
-                  {"Order " + order.id} {order.type === "VIP" && "(VIP)"}{" "}
-                  {getOrderBot(order.id) &&
-                    `(Bot ${getOrderBot(order.id)?.id})`}
-                </div>
+                <OrderLine
+                  idx={idx}
+                  order={order}
+                  bot={getOrderBot(order.id)}
+                />
               ))}
           </div>
         </Col>
