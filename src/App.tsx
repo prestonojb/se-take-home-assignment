@@ -4,7 +4,7 @@ import "./App.css";
 type Order = {
   id: number;
   botId?: number;
-  status: "PENDING" | "PROCESSING" | "COMPLETE";
+  status: "PENDING" | "COMPLETE";
   type: "Normal" | "VIP";
 };
 
@@ -12,12 +12,18 @@ type Bot = {
   id: number;
   status: "BUSY" | "IDLE";
   orderId?: number;
-  timeLeftToCompleteOrder?: number;
+  processOrder?: ReturnType<typeof setTimeout>;
 };
 
 const App = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [nextOrderId, setNextOrderId] = useState<number>(1001);
+
+  const [bots, setBots] = useState<Bot[]>([]);
+  const [nextBotId, setNextBotId] = useState<number>(1);
+
+  const getOrderBot = (orderId: number): Bot | undefined =>
+    bots.find((bot) => bot.orderId === orderId);
 
   const addOrder = (type: Order["type"]) => {
     const newOrder: Order = { id: nextOrderId, status: "PENDING", type };
@@ -25,123 +31,77 @@ const App = () => {
     setOrders((currentOrders) => [...currentOrders, newOrder]);
   };
 
-  useEffect(() => {
-    handleOrders();
-  }, [orders]);
-
-  const [bots, setBots] = useState<Bot[]>([]);
-  const [nextBotId, setNextBotId] = useState<number>(1);
-
   const addBot = () => {
     const newBot: Bot = { id: nextBotId, status: "IDLE" };
     setNextBotId(nextBotId + 1);
     setBots((currentBots) => [...currentBots, newBot]);
-    handleOrders();
   };
 
   const removeBot = () => {
     setBots((currentBots) => {
-      const botToRemove = currentBots[currentBots.length - 1];
-      if (typeof botToRemove !== "undefined") {
-        setOrders(
-          orders.map((order) => {
-            return order.id === botToRemove.orderId
-              ? { ...order, status: "PENDING" }
-              : order;
-          }),
-        );
+      const botToRemove: Bot = currentBots[currentBots.length - 1];
+      if (botToRemove !== undefined && botToRemove.processOrder !== undefined) {
+        clearTimeout(botToRemove.processOrder);
       }
       return currentBots.filter((_, idx, arr) => idx !== arr.length - 1);
     });
   };
 
-  const handleOrders = () => {
-    console.log(orders);
-    setBots((prevBots) =>
-      prevBots.map((bot) => {
+  useEffect(() => {
+    const idleBots = bots.filter((bot) => bot.status === "IDLE");
+    const unprocessedOrders = orders.filter(
+      (order) =>
+        order.status === "PENDING" &&
+        !bots.map((bot) => bot.orderId).includes(order.id),
+    );
+
+    if (idleBots.length === 0) return;
+    if (unprocessedOrders.length === 0) return;
+
+    const botsCopy = [...bots];
+
+    for (let unprocessedOrder of unprocessedOrders) {
+      for (let bot of botsCopy) {
         if (bot.status === "IDLE") {
-          const isPendingVIPOrder = (order: Order) =>
-            order.status === "PENDING" && order.type === "VIP";
-          const isPendingNormalOrder = (order: Order) =>
-            order.status === "PENDING" && order.type === "Normal";
-
-          const orderToProcess =
-            typeof orders.find(isPendingVIPOrder) !== "undefined"
-              ? orders.find(isPendingVIPOrder)
-              : orders.find(isPendingNormalOrder);
-
-          if (typeof orderToProcess !== "undefined") {
-            setOrders(
-              orders.map((order) => {
-                if (order.id === orderToProcess.id) {
-                  return { ...order, status: "PROCESSING" };
-                }
-                return order;
+          bot.status = "BUSY";
+          bot.orderId = unprocessedOrder.id;
+          bot.processOrder = setTimeout(() => {
+            setOrders((prevOrders) =>
+              prevOrders.map((order) => {
+                return order.id === unprocessedOrder.id
+                  ? { ...order, status: "COMPLETE" }
+                  : order;
               }),
             );
-            return {
-              ...bot,
-              status: "BUSY",
-              orderId: orderToProcess.id,
-              timeLeftToCompleteOrder: 10,
-            };
-          }
+            setBots((prevBots) =>
+              prevBots.map((prevBot) => {
+                return prevBot.id === bot.id
+                  ? {
+                      ...prevBot,
+                      status: "IDLE",
+                      orderId: undefined,
+                      processOrder: undefined,
+                    }
+                  : prevBot;
+              }),
+            );
+          }, 1000);
+          break;
         }
-        return bot;
-      }),
-    );
-  };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBots(
-        bots
-          .map((bot) => ({
-            ...bot,
-            timeLeftToCompleteOrder:
-              typeof bot.timeLeftToCompleteOrder !== "undefined"
-                ? bot.timeLeftToCompleteOrder - 1
-                : undefined,
-          }))
-          .map((bot) => {
-            if (bot.timeLeftToCompleteOrder === 0) {
-              setOrders(
-                orders.map((order) => {
-                  return order.id === bot.orderId
-                    ? { ...order, status: "COMPLETE" }
-                    : order;
-                }),
-              );
-              return {
-                ...bot,
-                status: "IDLE",
-                orderId: undefined,
-                timeLeftToCompleteOrder: undefined,
-              };
-            }
-            return bot;
-          }),
-      );
-    }, 1000);
-
-    return () => clearInterval(interval);
-  });
-
-  const getOrderBot = (orderId: number): Bot | undefined =>
-    bots.find((bot) => bot.orderId === orderId);
+      }
+    }
+    setBots(botsCopy);
+  }, [orders, bots]);
 
   return (
     <>
       <h2>Pending Orders</h2>
       {orders
-        .filter((order) => ["PENDING", "PROCESSING"].includes(order.status))
+        .filter((order) => order.status === "PENDING")
         .map((order) => (
           <div>
             {"Order " + order.id} {order.type === "VIP" && "(VIP)"}{" "}
-            {getOrderBot(order.id) &&
-              `(Bot ${getOrderBot(order.id)?.id}) (Finishing in ${
-                getOrderBot(order.id)?.timeLeftToCompleteOrder
-              })`}
+            {getOrderBot(order.id) && `(Bot ${getOrderBot(order.id)?.id})`}
           </div>
         ))}
 
@@ -151,10 +111,7 @@ const App = () => {
         .map((order) => (
           <div>
             {"Order " + order.id} {order.type === "VIP" && "(VIP)"}{" "}
-            {getOrderBot(order.id) &&
-              `(Bot ${getOrderBot(order.id)?.id}) (Finishing in ${
-                getOrderBot(order.id)?.timeLeftToCompleteOrder
-              })`}
+            {getOrderBot(order.id) && `(Bot ${getOrderBot(order.id)?.id})`}
           </div>
         ))}
 
