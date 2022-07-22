@@ -1,46 +1,34 @@
-# Getting Started with Create React App
+[Demo Link](https://se-take-home-assignment.vercel.app/)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Notable Frameworks/Libraries used
 
-## Available Scripts
+- Create React App (Typescript)
+- React 18
+- Bootstrap 5
 
-In the project directory, you can run:
+### User Story
 
-### `npm start`
+As below is part of the user story:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- As McDonald's customer, after I submit my order, I wish to see my order flow into "PENDING" area and moved to "COMPLETE" area after the cooking bot has completed my order. ✅
+- As McDonald's VIP member, after I submit my order, I want my order being process by cooking bot first before all normal order. If there's another VIP order came here, my order should queue behind his/her order. ✅
+- As McDonald's manager, I should able to increase or decrease number of cooking bot available in my restaurant. When I add a bot, it should start working immediately on the order. When I remove a bot, the processing dish should remain un-process. ✅
+- As McDonald bot, it can only pickup and process 1 order at a time, each cooking bot need 10 seconds to process an order. ✅
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### Requirements
 
-### `npm test`
+- When "New Normal Order" clicked, a new order should show up Pending Area. ✅
+- When "New VIP Order" clicked, a new order should show up in Pending Area. It should place in-front of all existing "Normal" order but behind of all existing "VIP" order. ✅
+- The Order number should be unique and increasing. ✅
+- When "+ Bot" clicked, a bot should be created and process the order inside "PENDING", after 10 seconds, the order should move to "COMPLETE". Then the bot should start processing another order if there is any left. ✅
+- If there is no more order in the "PENDING", the bot should do nothing until a new order come in. ✅
+- When "- Bot" clicked, the newest bot should be destroyed. If the bot is processing some order, the process should be abandon. The order now become "PENDING" and ready to process by other bot. ✅
+- No data persistance is needed for this prototype, you may perform all the process inside memory. ✅
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Functioning Prototype
 
-### `npm run build`
+You may demostrate your final funtioning prototype with **one (only)** of the following method:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- CLI application
+- UI application ✅
+- E2E test case

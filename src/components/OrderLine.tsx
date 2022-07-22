@@ -9,8 +9,8 @@ type Props = {
 const OrderLine = ({ idx, order, bot }: Props) => {
   return (
     <div key={idx}>
-      {"Order " + order.id} {order.type === "VIP" && "(VIP)"}{" "}
-      {bot !== undefined && `(Bot ${bot.id})`}
+      {"Order #" + order.id} {order.type === "VIP" && "(VIP)"}{" "}
+      {bot !== undefined && `(Processing by Bot ${bot.id}...)`}
     </div>
   );
 };
