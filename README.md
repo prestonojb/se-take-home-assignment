@@ -1,6 +1,6 @@
-[Demo Link](https://se-take-home-assignment.vercel.app/)
+## [Demo Link](https://se-take-home-assignment.vercel.app/)
 
-# Notable Frameworks/Libraries used
+### Frameworks/Libraries used
 
 - Create React App (Typescript)
 - React 18
