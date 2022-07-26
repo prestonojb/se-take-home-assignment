@@ -40,35 +40,49 @@ const App = () => {
 
   const removeBot = () => {
     setBots((currentBots) => {
-      const botToRemove: Bot = currentBots[currentBots.length - 1];
-      if (botToRemove !== undefined && botToRemove.processOrder !== undefined) {
-        clearTimeout(botToRemove.processOrder);
-      }
       return currentBots.filter((_, idx, arr) => idx !== arr.length - 1);
     });
   };
 
-  const completeOrder = (unprocessedOrder: Order, bot: Bot) => {
-    setOrders((prevOrders) =>
-      prevOrders.map((order) => {
-        return order.id === unprocessedOrder.id
-          ? { ...order, status: "COMPLETE" }
-          : order;
-      }),
-    );
-    setBots((prevBots) =>
-      prevBots.map((prevBot) => {
-        return prevBot.id === bot.id
-          ? {
-              ...prevBot,
-              status: "AVAILABLE",
-              orderId: undefined,
-              processOrder: undefined,
-            }
-          : prevBot;
-      }),
-    );
-  };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBots((prevBots) =>
+        prevBots.map((b) =>
+          b.msLeft !== undefined
+            ? {
+                ...b,
+                msLeft: b.msLeft - 1000,
+              }
+            : b,
+        ),
+      );
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    for (let bot of bots) {
+      if (bot.msLeft !== undefined && bot.msLeft <= 0) {
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.id === bot.orderId ? { ...order, status: "COMPLETE" } : order,
+          ),
+        );
+        setBots((prevBots) =>
+          prevBots.map((prevBot) =>
+            prevBot.id === bot.id
+              ? {
+                  ...prevBot,
+                  status: "AVAILABLE",
+                  orderId: undefined,
+                  msLeft: undefined,
+                }
+              : prevBot,
+          ),
+        );
+      }
+    }
+  }, [bots]);
 
   useEffect(() => {
     const availableBots = bots.filter((bot) => bot.status === "AVAILABLE");
@@ -90,10 +104,7 @@ const App = () => {
         if (bot.status === "AVAILABLE") {
           bot.status = "BUSY";
           bot.orderId = unprocessedOrder.id;
-          bot.processOrder = setTimeout(
-            () => completeOrder(unprocessedOrder, bot),
-            TIME_TO_PROCESS_ORDER,
-          );
+          bot.msLeft = TIME_TO_PROCESS_ORDER;
           break;
         }
       }

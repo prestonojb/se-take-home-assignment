@@ -9,5 +9,5 @@ export type Bot = {
   id: number;
   status: "BUSY" | "AVAILABLE";
   orderId?: number;
-  processOrder?: ReturnType<typeof setTimeout>;
+  msLeft?: number;
 };
